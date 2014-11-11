@@ -24,12 +24,12 @@ The sample code below contains the complete communications skeleton for a dynami
 application. following the code is a description of the few functions necessary to write typical parallel applications using the cpu_process_manager library. 
 
 The following program add_value is the function to be executed n times and to be parallelized:
-  
+   
 function add_value, a
   wait, .1 ; represents some time of computation
   return, a+1
 end
-
+   
 The following routine is the comented example:
    
 pro exemple_cpu_pm
@@ -81,3 +81,4 @@ pro exemple_cpu_pm
      ; compare the result (the difference shoule be zero)
      print, total(abs(array_1 - array_2))
   end 
+  
