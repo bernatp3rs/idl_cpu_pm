@@ -18,9 +18,7 @@ Warning: Incorrect use of shared memory routines can corrupt or even crash your 
 All version of the IDL_IDLBridge before IDL 8.3 cause a memory leak when using asynchronous executions. See the reference IDL-68399 in the following link:
 https://www.l3harrisgeospatial.com/Support/Self-Help-Tools/Help-Articles/Help-Articles-Detail/ArtMID/10220/ArticleID/15156/IDL-Fixed-Issues
 
-Some users are experiencing problems when using the IDL-Python bridge in the slave sessions. The Python executable needs to be added to the PATH environment variable and this information is not passed by default:
-
-To solve this issue, execute the following code to make sure that Python is visible after the general setup:
+Some users are experiencing problems when using the IDL-Python bridge in the slave sessions. The Python executable needs to be added to the PATH environment variable and this information is not passed by default. To solve this issue, execute the following code to make sure that Python is visible after the general setup:
 cpu_pm->setup
 cpu_pm->Execute_All, idlStmt, nowait=nowait
 
@@ -90,7 +88,7 @@ pro exemple_cpu_pm
   print, total(abs(array_1 - array_2))
 end
 
-Copyright (c) 2014 Bernat Puigdomenech Treserras (bernat.puigdomenech@gmail.com)
+Copyright (c) 2014 Bernat Puigdomenech Treserras (bernat.puigdomenech at gmail.com)
 
 This program is free software: you can redistribute it and/or modify it under the terms of the gnu general public license as published by the free software foundation, either version 3 of the license, or (at your option) any later version. This program is distributed in the hope that it will be useful, but without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose. See the gnu general public license for more details. You should have received a copy of the gnu general public license along with this program. 
 If not, see http://www.gnu.org/licenses/
