@@ -15,6 +15,9 @@ It is very important to note that there some limitations:
 
 Warning: Incorrect use of shared memory routines can corrupt or even crash your IDL application. proper use of these low level operating system features requires systems programming experience, and is not recommended for those without such experience.
 
+All version of the IDL_IDLBridge before IDL 8.3 cause a memory leak when using asynchronous executions. See the reference IDL-68399 in the following link:
+https://www.l3harrisgeospatial.com/Support/Self-Help-Tools/Help-Articles/Help-Articles-Detail/ArtMID/10220/ArticleID/15156/IDL-Fixed-Issues
+
 The sample code below contains the complete communications skeleton for a dynamically load balanced master/slave application. Following the code is a description of the few functions necessary to write typical parallel applications using the cpu_process_manager library.
 
 The following program add_value is the function to be executed n times and to be parallelized:
