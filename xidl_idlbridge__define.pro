@@ -82,7 +82,9 @@ pro xidl_idlbridge::call_function, name, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10
   wrapper='self->processroutine,'''+name+''',1l'
   if n_param gt 0 then wrapper+=','+strjoin('p'+string(1+indgen(n_param),format='(i0)'),',')
   
-  if n_elements(extra) ne 0 then wrapper+=',_ref_extra=extra'
+; if n_elements(extra) ne 0 then wrapper+=',_ref_extra=extra'
+  ;; IDL 8.7 Keyword _REF_EXTRA is not allowed when calling a routine
+  if n_elements(extra) ne 0 then wrapper+=',_extra=extra'
   
   aux=execute(wrapper,1,1)
 end
@@ -104,7 +106,9 @@ pro xidl_idlbridge::call_procedure, name, p1, p2, p3, p4, p5, p6, p7, p8, p9, p1
   wrapper='self->processroutine,'''+name+''',0l'
   if n_param gt 0 then wrapper+=','+strjoin('p'+string(1+indgen(n_param),format='(i0)'),',')
   
-  if n_elements(extra) ne 0 then wrapper+=',_ref_extra=extra'
+; if n_elements(extra) ne 0 then wrapper+=',_ref_extra=extra'
+  ;; IDL 8.7 Keyword _REF_EXTRA is not allowed when calling a routine
+  if n_elements(extra) ne 0 then wrapper+=',_extra=extra'
   
   aux=execute(wrapper,1,1)
 end
@@ -159,7 +163,9 @@ pro xidl_idlbridge::processroutine, routine_name, is_function, p1, p2, p3, p4, p
   endif
   
   if n_extra gt 0 then begin
-    key_info=self->processkey(n_extra,_ref_extra=extra)
+;   key_info=self->processkey(n_extra,_ref_extra=extra)
+    ;; IDL 8.7 Keyword _REF_EXTRA is not allowed when calling a routine
+    key_info=self->processkey(n_extra,_extra=extra)
     
     if ~is_function or n_param gt 0 then exec_stmt+=','
     exec_stmt+=strjoin(extra+'='+key_info.name,',')
@@ -271,23 +277,38 @@ function xidl_idlbridge::setparam, param, ref_extra=ref_extra, tname=tname
       n_elem=n_elements(param)
       
       tname=self->temporaryname()
-      tagnames=tag_names(param[0])
       
+      tagname=tag_names(param[0])
+      strname=tag_names(param[0],/structure_name)
+      
+      ;; Tue Sep 15, 2020 - system structure (i.e. !map)
+      sysname=strcmp(strmid(strname,0,1),'!')
+      if sysname then self->idl_idlbridge::execute, tname+'=create_struct(name='''+strname+''')'
+    
       ;; use tname to avoid overwriting existing parameters
       for i=0, n_elem-1 do begin
       
         ;; todo avoid concatenation
-        for j=0, n_elements(tagnames)-1 do begin
+        for j=0, n_elements(tagname)-1 do begin
+
           jname=self->setparam(param[i].(j),/tname)
-          
-          if j eq 0 then self->idl_idlbridge::execute, tname+'=create_struct('''+tagnames[j]+''',temporary('+jname+'))' $
-          else self->idl_idlbridge::execute, tname+'=create_struct(temporary('+tname+'),'''+tagnames[j]+''',temporary('+jname+'))
+
+          if sysname then begin
+            self->idl_idlbridge::execute, tname+'.'+tagname[j]+'=temporary('+jname+')'
+          endif else begin
+            if j eq 0 then begin
+              self->idl_idlbridge::execute, tname+'=create_struct('''+tagname[j]+''',temporary('+jname+'),name='''+strname+''')'
+            endif else begin
+              self->idl_idlbridge::execute, tname+'=create_struct(temporary('+tname+'),'''+tagname[j]+''',temporary('+jname+'))
+            endelse
+          endelse
         endfor
         
         if i eq 0 then self->idl_idlbridge::execute, name+'=temporary('+tname+')' $
         else self->idl_idlbridge::execute, name+'=[temporary(name),temporary('+tname+')'
         
       endfor
+    
     end
     
     ;; pointer
@@ -479,8 +500,20 @@ pro xidl_idlbridge::prepare_session, reset=reset
   self->idl_idlbridge::execute, 'cd, '''+path+'''
 ;  self->cd, path
   
-  ;; idl path
-  self->idl_idlbridge::execute, '!path='''+!path+'''
+  ;; IDL path
+  if strlen(!path) gt 4090 then begin
+    
+    self->idl_idlbridge::execute, '!path='''''
+    cnt=0L
+    while cnt lt strlen(!path) do begin
+      self->idl_idlbridge::execute, '!path=!path+'''+strmid(!path,cnt,cnt+1024)+'''
+      cnt+=1024L
+    endwhile
+    
+  endif else self->idl_idlbridge::execute, '!path='''+!path+'''
+  
+  ;; Wed Jul 22, 2020 - for some reason, sometimes routines in the path may not be used (i.e. call_kdtree_search) 
+;  resolve_all
   
   ;; compiled procedures and functions
   proc=routine_info(/source)
