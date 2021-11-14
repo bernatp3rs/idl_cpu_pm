@@ -18,6 +18,16 @@ Warning: Incorrect use of shared memory routines can corrupt or even crash your 
 All version of the IDL_IDLBridge before IDL 8.3 cause a memory leak when using asynchronous executions. See the reference IDL-68399 in the following link:
 https://www.l3harrisgeospatial.com/Support/Self-Help-Tools/Help-Articles/Help-Articles-Detail/ArtMID/10220/ArticleID/15156/IDL-Fixed-Issues
 
+Some users are experiencing problems when using the IDL-Python bridge in the slave sessions. The Python executable needs to be added to the PATH environment variable and this information is not passed by default:
+
+To solve this issue, execute the following code to make sure that Python is visible after the general setup:
+cpu_pm->setup
+cpu_pm->Execute_All, idlStmt, nowait=nowait
+
+Where idlStmt should be something like (this is a Linux solution):
+spawn, 'setenv PATH /usr/local/anaconda3:${PATH}'
+spawn, 'setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/usr/local/anaconda3/linux_34x/lib:/usr/local/idl/bin/bin.linux.x86_64'
+
 The sample code below contains the complete communications skeleton for a dynamically load balanced master/slave application. Following the code is a description of the few functions necessary to write typical parallel applications using the cpu_process_manager library.
 
 The following program add_value is the function to be executed n times and to be parallelized:
